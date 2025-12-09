@@ -1,0 +1,33 @@
+name: Build Custom Caddy
+# 触发条件：手动点击按钮触发
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Install xcaddy
+        # 安装官方最新版 xcaddy 构建工具
+        run: go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+
+      - name: Build Caddy with Cloudflare
+        run: |
+          # 使用 xcaddy 编译，指定 cloudflare 插件
+          # --output 指定输出文件名
+          ~/go/bin/xcaddy build \
+            --with github.com/caddy-dns/cloudflare \
+            --output caddy_linux_amd64
+
+      - name: Upload Artifact
+        # 将编译好的文件上传，供你下载
+        uses: actions/upload-artifact@v4
+        with:
+          name: caddy-binary
+          path: caddy_linux_amd64
+          retention-days: 5 # 文件保留5天
